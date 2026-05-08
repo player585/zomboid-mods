@@ -1,0 +1,16 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+*.swp
+
+# PZ build artifacts
+*.cache
+*.log
+
+# Placeholder asset folders (don't commit empty dirs)
+**/textures/vehicles/.gitkeep
+**/models/vehicles/.gitkeep
+**/sound/.gitkeep
