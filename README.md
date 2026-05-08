@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🧟 zomboid-mods
 
 > Project Zomboid mods by **carswell585**  
@@ -71,6 +70,4 @@ Place your working mod folder directly in `C:\Users\<You>\Zomboid\Workshop\` for
 ## 📄 License
 
 MIT — fork it, mod it, ship it. Credit appreciated but not required.
-=======
 # zomboid-mods
->>>>>>> 7feae3b819d223e2c3ab1684d03928515da44641
