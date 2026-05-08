@@ -22,7 +22,9 @@ FOLDER="$1"
 MODID="$2"
 DISPLAY="$3"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-TARGET="$REPO_ROOT/$FOLDER"
+MODS_DIR="$REPO_ROOT/mods"
+mkdir -p "$MODS_DIR"
+TARGET="$MODS_DIR/$FOLDER"
 
 if [ -e "$TARGET" ]; then
     echo "Refusing to overwrite existing folder: $TARGET"
@@ -108,7 +110,7 @@ EOF
 # Add the new mod to root README mod table
 README="$REPO_ROOT/README.md"
 if [ -f "$README" ] && ! grep -q "$FOLDER" "$README"; then
-    awk -v line="| [$DISPLAY](./$FOLDER) | TODO description | 🚧 WIP v0.1.0 | 41 + 42 |" '
+    awk -v line="| [$DISPLAY](./mods/$FOLDER) | TODO description | 🚧 WIP v0.1.0 | 41 + 42 |" '
         /^\| \[⚡ Electric Scooter\]/ { print; print line; next }
         { print }
     ' "$README" > "$README.tmp" && mv "$README.tmp" "$README"

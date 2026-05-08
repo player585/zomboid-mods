@@ -20,7 +20,7 @@ travels with the code.
 
 | You want to … | Read |
 |---------------|------|
-| Add a new vehicle | Complete Guide → Vehicles section + `electric-scooter/` as a reference implementation |
+| Add a new vehicle | Complete Guide → Vehicles section + `mods/electric-scooter/` as a reference implementation |
 | Add a new item / recipe | Complete Guide → Items + Recipes |
 | Hook a Lua event | Complete Guide → Events list |
 | Understand the engine | Deep Dive |

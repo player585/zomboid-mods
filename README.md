@@ -16,7 +16,7 @@ own subfolder with full source, docs, and Workshop-ready packaging.
 
 | Mod | Description | Status | Build |
 |-----|-------------|--------|-------|
-| [⚡ Electric Scooter](./electric-scooter) | Near-silent battery-powered scooter. Stealth vehicle, HUD battery indicator, right-click battery check | ✅ v1.0.0 (assets pending) | 41 + 42 |
+| [⚡ Electric Scooter](./mods/electric-scooter) | Near-silent battery-powered scooter. Stealth vehicle, HUD battery indicator, right-click battery check | ✅ v1.0.0 (assets pending) | 41 + 42 |
 
 > More mods coming — see [ROADMAP.md](./ROADMAP.md). Drop a ⭐ to follow along.
 
@@ -30,7 +30,7 @@ own subfolder with full source, docs, and Workshop-ready packaging.
 3. Launch PZ → Main Menu → Mods → Enable → Play
 
 ### Manual
-1. Download the mod subfolder (e.g. `electric-scooter/`)
+1. Download the mod subfolder (e.g. `mods/electric-scooter/`)
 2. Copy the inner mod folder from `Contents/mods/` to:
    - Linux / Mac: `~/Zomboid/Workshop/`
    - Windows: `C:\Users\<You>\Zomboid\Workshop\`
@@ -64,15 +64,16 @@ zomboid-mods/
 │   └── Project-Zomboid-Deep-Dive.md
 ├── scripts/
 │   └── new-mod.sh               ← scaffolder for a new mod
-└── electric-scooter/            ← Mod #1
-    ├── README.md
-    ├── workshop.txt
-    └── Contents/mods/ElectricScooter/
-        ├── common/media/lua/{shared,client,server}/
-        ├── common/media/scripts/vehicles/
-        ├── common/media/{textures,models,sound}/
-        ├── 41/mod.info
-        └── 42/mod.info
+└── mods/                        ← all mods live here
+    └── electric-scooter/        ← Mod #1
+        ├── README.md
+        ├── workshop.txt
+        └── Contents/mods/ElectricScooter/
+            ├── common/media/lua/{shared,client,server}/
+            ├── common/media/scripts/vehicles/
+            ├── common/media/{textures,models,sound}/
+            ├── 41/mod.info
+            └── 42/mod.info
 ```
 
 ---
@@ -93,8 +94,9 @@ then commit changes back here.
 ./scripts/new-mod.sh fishing-overhaul FishingOverhaul "Fishing Overhaul"
 ```
 
-This creates the full Build 41 + 42 folder layout, `mod.info` files,
-`workshop.txt`, a stub README, and a starter Lua core file.
+This creates `mods/fishing-overhaul/` with the full Build 41 + 42 folder
+layout, `mod.info` files, `workshop.txt`, a stub README, and a starter Lua
+core file — and adds a row to the table above automatically.
 
 ---
 

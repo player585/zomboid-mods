@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on a
 
 ## [Unreleased]
 
+### Changed
+- **Repo layout:** all mods now live under a top-level `mods/` folder so
+  they’re visually grouped instead of mixing with infra files. Moved
+  `electric-scooter/` → `mods/electric-scooter/` via `git mv` (history
+  preserved). Updated every doc reference and the scaffolder.
+
 ### Added
 - Repo-wide AA pass: LICENSE (MIT), CODE_OF_CONDUCT, SECURITY policy, this
   CHANGELOG, `.editorconfig`, GitHub PR template, Lua-syntax CI workflow,
@@ -36,6 +42,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on a
   (loudness 4), HUD battery indicator, right-click "Check Battery", spawns in
   suburbs and parking lots, server-authoritative battery drain.
 - **Note:** Assets (textures, FBX model, OGG sounds, posters) not yet
-  shipped — see `electric-scooter/README.md` for the asset list.
+  shipped — see `mods/electric-scooter/README.md` for the asset list.
 - **Note:** Not yet published to Steam Workshop; `workshop.txt` still
   has `id=0`.
