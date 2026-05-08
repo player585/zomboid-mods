@@ -2,6 +2,6 @@ name=Electric Scooter
 id=ElectricScooter
 description=Adds a rideable electric scooter to Knox Country. Near-silent engine, battery-powered, single seat — the perfect stealth vehicle. Spawns in suburbs, parking lots, and garages.
 poster=poster.png
-url=
+url=https://github.com/player585/zomboid-mods
 modversion=1.0.0
 pzversion=41

@@ -50,7 +50,7 @@ Each mod that has been published will have a Workshop link in its own README.
 
 Clone the repo:
 ```bash
-git clone https://github.com/carswell585/zomboid-mods.git
+git clone https://github.com/player585/zomboid-mods.git
 cd zomboid-mods
 ```
 
