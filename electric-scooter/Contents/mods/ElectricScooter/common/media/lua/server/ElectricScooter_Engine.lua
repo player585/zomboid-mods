@@ -1,55 +1,59 @@
 -- ============================================================
 --  ElectricScooter_Engine.lua
---  SERVER-SIDE: Battery drain logic
---  Fires every vehicle update tick on the server.
---  Multiplayer safe — server is authoritative over battery state.
+--  SERVER-SIDE (also runs in singleplayer):
+--    * Drains battery while the engine runs.
+--    * Locks the fuel system so vanilla "out of gas" never fires.
+--    * Cuts the engine when battery dips below MIN_BATTERY_TO_RUN.
 -- ============================================================
 
 require "ElectricScooter_Core"
 
+local function notifyNearbyPlayers(vehicle, msg)
+    -- IsoGridSquare has no getPlayers(); enumerate IsoPlayer.players instead
+    -- and filter by distance to the vehicle.
+    local vx, vy, vz = vehicle:getX(), vehicle:getY(), vehicle:getZ()
+    local players = IsoPlayer.players  -- ArrayList<IsoPlayer>
+    if not players then return end
+
+    for i = 0, players:size() - 1 do
+        local pl = players:get(i)
+        if pl then
+            local dx = pl:getX() - vx
+            local dy = pl:getY() - vy
+            local dz = pl:getZ() - vz
+            local distSq = dx * dx + dy * dy + dz * dz
+            if distSq < 100 then -- within ~10 tiles
+                pl:Say(msg)
+            end
+        end
+    end
+end
+
 local function onVehicleUpdated(vehicle)
-    -- Bail early if not our scooter
     if not ElectricScooter.isElectricScooter(vehicle) then return end
 
-    -- Lock out the fuel system — electric vehicle uses no gas
-    -- This prevents the vanilla "engine off due to no fuel" logic
+    -- Lock fuel at max so the vanilla fuel system doesn't kill the engine
     local fuelMax = vehicle:getFuelMax()
     if vehicle:getFuel() < fuelMax then
         vehicle:setFuel(fuelMax)
     end
 
-    -- Only drain battery when the engine is actually running
+    -- Only drain battery when the engine is running
     if not vehicle:isEngineRunning() then return end
 
     local batteryPart = vehicle:getPartById("Battery")
     if not batteryPart then return end
 
-    local currentCondition = batteryPart:getCondition()
+    local current = batteryPart:getCondition()
 
-    -- Kill the engine if battery is too dead
-    if currentCondition <= ElectricScooter.MIN_BATTERY_TO_RUN then
+    if current <= ElectricScooter.MIN_BATTERY_TO_RUN then
         vehicle:setEngineRunning(false)
-        -- Notify any nearby players via chat (optional feedback)
-        local x = vehicle:getX()
-        local y = vehicle:getY()
-        local z = vehicle:getZ()
-        local square = getCell():getGridSquare(x, y, z)
-        if square then
-            local players = square:getPlayers()
-            if players then
-                for i = 0, players:size() - 1 do
-                    local pl = players:get(i)
-                    if pl then
-                        pl:Say("*scooter battery dead*")
-                    end
-                end
-            end
-        end
+        notifyNearbyPlayers(vehicle, "*scooter battery dead*")
         return
     end
 
-    -- Drain the battery
-    local newCondition = currentCondition - ElectricScooter.BATTERY_DRAIN_RATE
+    -- Drain
+    local newCondition = current - ElectricScooter.BATTERY_DRAIN_RATE
     batteryPart:setCondition(math.max(0, newCondition))
 end
 

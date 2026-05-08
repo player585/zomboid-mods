@@ -1,68 +1,82 @@
 -- ============================================================
 --  ElectricScooter_HUD.lua
---  CLIENT-SIDE: Draws a battery charge indicator on screen
---  when the player is riding the electric scooter.
+--  CLIENT-SIDE: Battery charge indicator drawn on screen
+--  while the player is riding the electric scooter.
+--
+--  Implementation notes:
+--    * Uses ISUIElement so we get a real drawRect / drawText API.
+--    * Mounts on UIManager.AddUI() and toggles visibility based on
+--      whether the player is in our scooter.
+--    * Polled via OnPlayerUpdate (NOT OnPreUIDraw — that event
+--      does not exist in PZ).
 -- ============================================================
 
 require "ElectricScooter_Core"
+require "ISUI/ISUIElement"
 
-local HUD = {}
-HUD.visible     = false
-HUD.charge      = 100
-HUD.x           = 20
-HUD.y           = 200
-HUD.width       = 120
-HUD.height      = 18
-HUD.padding     = 4
+ElectricScooterHUD = ISUIElement:derive("ElectricScooterHUD")
 
--- Poll vehicle state every player update
-local function onPlayerUpdate(player)
-    if not player then return end
-    local vehicle = player:getVehicle()
-    if vehicle and ElectricScooter.isElectricScooter(vehicle) then
-        HUD.visible = true
-        local batteryPart = vehicle:getPartById("Battery")
-        if batteryPart then
-            HUD.charge = batteryPart:getCondition()
-        else
-            HUD.charge = 0
-        end
-    else
-        HUD.visible = false
-    end
+function ElectricScooterHUD:initialise()
+    ISUIElement.initialise(self)
+    self.charge = 100
 end
 
--- Draw the HUD element
-local function onPreUIDraw()
-    if not HUD.visible then return end
+function ElectricScooterHUD:prerender()
+    -- Background pill
+    self:drawRect(0, 0, self.width, self.height, 0.85, 0.08, 0.08, 0.08)
+    self:drawRectBorder(0, 0, self.width, self.height, 0.9, 0.6, 0.6, 0.6)
 
-    local ui    = UIManager.getUI()
-    local sw    = getCore():getScreenWidth()
-    local sh    = getCore():getScreenHeight()
-    local drawX = HUD.x
-    local drawY = sh - 150   -- bottom-left area above inventory bar
+    -- Charge fill
+    local pct   = math.max(0, math.min(100, self.charge)) / 100
+    local fillW = math.floor((self.width - 8) * pct)
 
-    local pct   = math.max(0, math.min(100, HUD.charge)) / 100
-    local fillW = math.floor((HUD.width - HUD.padding * 2) * pct)
-
-    -- Background bar
-    UIManager.DrawTextureScaled(nil, drawX, drawY, HUD.width, HUD.height, 1, 0.1, 0.1, 0.1, 0.8)
-
-    -- Charge fill: green > yellow > red based on level
     local r, g, b
     if pct > 0.5 then
-        r, g, b = 0.2, 0.9, 0.3
+        r, g, b = 0.20, 0.90, 0.30
     elseif pct > 0.25 then
-        r, g, b = 0.9, 0.7, 0.1
+        r, g, b = 0.95, 0.75, 0.10
     else
-        r, g, b = 0.9, 0.1, 0.1
+        r, g, b = 0.95, 0.15, 0.15
     end
-    UIManager.DrawTextureScaled(nil, drawX + HUD.padding, drawY + HUD.padding, fillW, HUD.height - HUD.padding * 2, 1, r, g, b, 1)
+    self:drawRect(4, 4, fillW, self.height - 8, 1, r, g, b)
 
     -- Label
-    local label = string.format("⚡ %.0f%%", HUD.charge)
-    getDebugDrawing():DrawTextLeft(drawX + HUD.width + 6, drawY + 2, label, 1, 1, 1, 1)
+    local label = string.format("BATTERY  %.0f%%", self.charge)
+    self:drawText(label, self.width + 8, 2, 1, 1, 1, 1, UIFont.Small)
+end
+
+function ElectricScooterHUD:render()
+    -- Currently nothing additional in render; prerender handles draw.
+end
+
+-- ---------- Singleton management ----------
+
+local instance = nil
+
+local function ensureCreated()
+    if instance then return instance end
+    local sw = getCore():getScreenWidth()
+    local sh = getCore():getScreenHeight()
+    instance = ElectricScooterHUD:new(20, sh - 160, 140, 22)
+    instance:initialise()
+    instance:instantiate()
+    instance:setVisible(false)
+    instance:addToUIManager()
+    return instance
+end
+
+local function onPlayerUpdate(player)
+    if not player then return end
+    local hud = ensureCreated()
+    local vehicle = player:getVehicle()
+
+    if vehicle and ElectricScooter.isElectricScooter(vehicle) then
+        local batteryPart = vehicle:getPartById("Battery")
+        hud.charge = (batteryPart and batteryPart:getCondition()) or 0
+        if not hud:isVisible() then hud:setVisible(true) end
+    else
+        if hud:isVisible() then hud:setVisible(false) end
+    end
 end
 
 Events.OnPlayerUpdate.Add(onPlayerUpdate)
-Events.OnPreUIDraw.Add(onPreUIDraw)

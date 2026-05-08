@@ -100,9 +100,9 @@ module Base
 
         part Engine
         {
-            itemType            = null,
+            /* No itemType: engine is permanent (no installable engine block).
+               specificAnim omitted = use default mechanic anim. */
             mechanicRequireKey  = false,
-            specificAnim        = null,
             table install
             {
                 requireInstalled = none,

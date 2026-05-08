@@ -1,0 +1,54 @@
+name: Lua syntax check
+
+on:
+  push:
+    paths:
+      - "**/*.lua"
+      - ".github/workflows/lua-lint.yml"
+  pull_request:
+    paths:
+      - "**/*.lua"
+
+jobs:
+  lua-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Lua
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.3 luac5.3
+
+      - name: Syntax-check every .lua file
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r -d '' f; do
+            echo "==> $f"
+            if ! luac5.3 -p "$f"; then
+              fail=1
+            fi
+          done < <(find . -name '*.lua' -print0)
+          exit $fail
+
+  zedscript-sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check ZedScript files for unbalanced braces
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r -d '' f; do
+            opens=$(grep -o '{' "$f" | wc -l)
+            closes=$(grep -o '}' "$f" | wc -l)
+            if [ "$opens" -ne "$closes" ]; then
+              echo "::error file=$f::Unbalanced braces ($opens '{' vs $closes '}')"
+              fail=1
+            else
+              echo "ok $f ($opens braces)"
+            fi
+          done < <(find . -path ./.git -prune -o -name '*.txt' -path '*/scripts/*' -print0)
+          exit $fail
