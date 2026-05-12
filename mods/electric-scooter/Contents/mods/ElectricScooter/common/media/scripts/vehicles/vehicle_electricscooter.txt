@@ -114,6 +114,7 @@ module Base
             Z=+0.45 (front) and Z=-0.45 (rear), radius 0.08. **/
         wheel FrontLeft
         {
+            model  = Vehicles_Wheel,
             front  = true,
             offset = 0.01 -0.05 0.45,
             radius = 0.08,
@@ -121,6 +122,7 @@ module Base
         }
         wheel FrontRight
         {
+            model  = Vehicles_Wheel,
             front  = true,
             offset = -0.01 -0.05 0.45,
             radius = 0.08,
@@ -128,6 +130,7 @@ module Base
         }
         wheel RearLeft
         {
+            model  = Vehicles_Wheel,
             front  = false,
             offset = 0.01 -0.05 -0.45,
             radius = 0.08,
@@ -135,6 +138,7 @@ module Base
         }
         wheel RearRight
         {
+            model  = Vehicles_Wheel,
             front  = false,
             offset = -0.01 -0.05 -0.45,
             radius = 0.08,
