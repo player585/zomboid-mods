@@ -4,12 +4,10 @@
     Author: zmodder
 
     A near-silent, battery-powered single-seater. Treats the
-    car battery as its only fuel source (no gas tank). Spawns
-    rare in suburb / parking pools.
+    car battery as its only fuel source (no gas tank).
 
-    Uses B42 vehicle template inheritance (template! = SmallCar)
-    instead of declaring every part inline. Overrides only the
-    pieces that differ from a small vanilla car.
+    Self-contained (no template! inheritance) so it loads
+    regardless of vanilla template registration order.
     ============================================================ **/
 
 module Base
@@ -17,17 +15,11 @@ module Base
 
     vehicle ElectricScooter
     {
-        /** Pull in the small-car chassis: areas, wheels, seats,
-            engine, battery, tires, brakes, doors, windows, sounds,
-            collision. We then override what matters. **/
-        template! = SmallCar,
-
-        /** ---- Identity / handling ---- **/
         mechanicType            = 1,
+
+        /** ---- Performance ---- **/
         engineRepairLevel       = 2,
         playerDamageProtection  = 0.25,
-
-        /** ---- Performance: light, slow, near-silent ---- **/
         mass                    = 90,
         engineForce             = 2800,
         engineQuality           = 60,
@@ -40,15 +32,28 @@ module Base
         rollInfluence           = 0.15,
         wheelFriction           = 1.2,
         offRoadEfficiency       = 0.65,
+        suspensionStiffness     = 30.0,
+        suspensionDamping       = 2.88,
+        suspensionRestLength    = 0.2,
+        maxSuspensionTravelCm   = 10.0,
+        frontEndHealth          = 100,
+        rearEndHealth           = 100,
+        seats                   = 1,
 
-        /** ---- Custom skin / damage textures ---- **/
+        extents                 = 0.5 0.6 1.2,
+        physicsChassisShape     = 0.5 0.6 1.2,
+        centerOfMassOffset      = 0.0 0.3 0.0,
+        shadowExtents           = 0.5 1.2,
+        shadowOffset            = 0.0 0.0,
+
+        /** ---- Textures ---- **/
         textureMask             = vehicles/ElectricScooter_mask,
         textureLights           = vehicles/ElectricScooter_lights,
         textureRust             = vehicles/ElectricScooter_rust,
         textureDamage1Overlay   = vehicles/ElectricScooter_damage1,
         textureDamage2Overlay   = vehicles/ElectricScooter_damage2,
 
-        /** ---- 3D model (placeholder cube for now) ---- **/
+        /** ---- Model ---- **/
         model
         {
             file    = vehicles/ElectricScooter,
@@ -56,7 +61,7 @@ module Base
             offset  = 0 0 0,
         }
 
-        /** ---- Custom near-silent sound set ---- **/
+        /** ---- Sounds ---- **/
         sound
         {
             engine          = ElectricScooterHum,
@@ -66,25 +71,91 @@ module Base
             ignitionFail    = VehicleIgnitionFailSmallCar,
         }
 
-        /** ---- Part overrides ---- **/
-
-        /** Battery: vanilla CarBattery, but tagged via Lua hook
-            to drain even when stopped (handled by our update fn). **/
-        part Battery
+        /** ---- Wheels ---- **/
+        wheel FrontLeft
         {
-            itemType = Base.CarBattery,
-            lua
+            front   = true,
+            offset  = 0.20 -0.2 0.38,
+            radius  = 0.18,
+            width   = 0.12,
+        }
+        wheel FrontRight
+        {
+            front   = true,
+            offset  = -0.20 -0.2 0.38,
+            radius  = 0.18,
+            width   = 0.12,
+        }
+        wheel RearLeft
+        {
+            front   = false,
+            offset  = 0.20 -0.2 -0.38,
+            radius  = 0.18,
+            width   = 0.12,
+        }
+        wheel RearRight
+        {
+            front   = false,
+            offset  = -0.20 -0.2 -0.38,
+            radius  = 0.18,
+            width   = 0.12,
+        }
+
+        /** ---- Seat / passenger ---- **/
+        passenger FrontLeft
+        {
+            position inside
             {
-                create = Vehicles.Create.Battery,
-                update = ElectricScooter.Update.Battery,
+                offset  = 0.0 -0.1 0.0,
+                rotate  = 0.0 0.0 0.0,
+            }
+            position outside
+            {
+                offset  = 0.4 -0.4 0.0,
+                rotate  = 0.0 0.0 0.0,
+                area    = SeatFrontLeft,
             }
         }
 
-        /** Engine: keep vanilla install/uninstall flow, but our
-            update function locks fuel at max so the vanilla "no gas"
-            check never fires (scooter has no gas tank). **/
+        /** ---- Areas (interaction zones) ---- **/
+        area Engine
+        {
+            xywh = 0.0 0.6 0.5 0.4,
+        }
+        area TruckBed
+        {
+            xywh = 0.0 -0.6 0.5 0.4,
+        }
+        area SeatFrontLeft
+        {
+            xywh = 0.4 0.0 0.4 0.4,
+        }
+        area TireFrontLeft
+        {
+            xywh = 0.4 0.4 0.3 0.3,
+        }
+        area TireFrontRight
+        {
+            xywh = -0.4 0.4 0.3 0.3,
+        }
+        area TireRearLeft
+        {
+            xywh = 0.4 -0.4 0.3 0.3,
+        }
+        area TireRearRight
+        {
+            xywh = -0.4 -0.4 0.3 0.3,
+        }
+
+        /** ---- Parts ---- **/
+
         part Engine
         {
+            mechanicArea       = Engine,
+            area               = Engine,
+            category           = engine,
+            mechanicRequireKey = true,
+            durability         = 5,
             lua
             {
                 create      = Vehicles.Create.Engine,
@@ -93,19 +164,267 @@ module Base
             }
         }
 
-        /** Hide the (inherited) gas tank visually — we keep the part
-            so vanilla code that probes for it doesn't crash, but lock
-            it full and uninteractable. **/
-        part GasTank
+        part Battery
         {
-            category = nodisplay,
+            mechanicArea       = Engine,
+            area               = Engine,
+            itemType           = Base.CarBattery,
+            mechanicRequireKey = false,
+            category           = engine,
+            durability         = 2,
+            table install
+            {
+                items
+                {
+                    1
+                    {
+                        tags  = base:screwdriver,
+                        count = 1,
+                        keep  = true,
+                        equip = primary,
+                    }
+                }
+                skills = Mechanics:1,
+                time   = 100,
+                test   = Vehicles.InstallTest.Default,
+            }
+            table uninstall
+            {
+                items
+                {
+                    1
+                    {
+                        tags  = base:screwdriver,
+                        count = 1,
+                        keep  = true,
+                        equip = primary,
+                    }
+                }
+                skills = Mechanics:1,
+                time   = 100,
+                test   = Vehicles.UninstallTest.Battery,
+            }
+            lua
+            {
+                create = Vehicles.Create.Battery,
+                update = ElectricScooter.Update.Battery,
+            }
+        }
+
+        part TireFrontLeft
+        {
+            mechanicArea = Left,
+            area         = TireFrontLeft,
+            wheel        = FrontLeft,
+            category     = tire,
+            itemType     = Base.NormalTire,
+            durability   = 2,
+            container
+            {
+                test        = Vehicles.ContainerAccess.Tire,
+                contentType = Air,
+            }
+            table install
+            {
+                items
+                {
+                    1 { type = Base.Jack, count = 1, keep = true, }
+                    2 { tags = base:lugwrench, count = 1, keep = true, equip = primary, }
+                }
+                time   = 200,
+                skills = Mechanics:1,
+                test   = Vehicles.InstallTest.Default,
+            }
+            table uninstall
+            {
+                items
+                {
+                    1 { type = Base.Jack, count = 1, keep = true, }
+                    2 { tags = base:lugwrench, count = 1, keep = true, equip = primary, }
+                }
+                time   = 200,
+                skills = Mechanics:1,
+                test   = Vehicles.UninstallTest.Default,
+            }
+            lua
+            {
+                create   = Vehicles.Create.Tire,
+                init     = Vehicles.Init.Tire,
+                update   = Vehicles.Update.Tire,
+            }
+        }
+
+        part TireFrontRight
+        {
+            mechanicArea = Right,
+            area         = TireFrontRight,
+            wheel        = FrontRight,
+            category     = tire,
+            itemType     = Base.NormalTire,
+            durability   = 2,
+            container
+            {
+                test        = Vehicles.ContainerAccess.Tire,
+                contentType = Air,
+            }
+            table install
+            {
+                items
+                {
+                    1 { type = Base.Jack, count = 1, keep = true, }
+                    2 { tags = base:lugwrench, count = 1, keep = true, equip = primary, }
+                }
+                time   = 200,
+                skills = Mechanics:1,
+                test   = Vehicles.InstallTest.Default,
+            }
+            table uninstall
+            {
+                items
+                {
+                    1 { type = Base.Jack, count = 1, keep = true, }
+                    2 { tags = base:lugwrench, count = 1, keep = true, equip = primary, }
+                }
+                time   = 200,
+                skills = Mechanics:1,
+                test   = Vehicles.UninstallTest.Default,
+            }
+            lua
+            {
+                create = Vehicles.Create.Tire,
+                init   = Vehicles.Init.Tire,
+                update = Vehicles.Update.Tire,
+            }
+        }
+
+        part TireRearLeft
+        {
+            mechanicArea = Left,
+            area         = TireRearLeft,
+            wheel        = RearLeft,
+            category     = tire,
+            itemType     = Base.NormalTire,
+            durability   = 2,
+            container
+            {
+                test        = Vehicles.ContainerAccess.Tire,
+                contentType = Air,
+            }
+            table install
+            {
+                items
+                {
+                    1 { type = Base.Jack, count = 1, keep = true, }
+                    2 { tags = base:lugwrench, count = 1, keep = true, equip = primary, }
+                }
+                time   = 200,
+                skills = Mechanics:1,
+                test   = Vehicles.InstallTest.Default,
+            }
+            table uninstall
+            {
+                items
+                {
+                    1 { type = Base.Jack, count = 1, keep = true, }
+                    2 { tags = base:lugwrench, count = 1, keep = true, equip = primary, }
+                }
+                time   = 200,
+                skills = Mechanics:1,
+                test   = Vehicles.UninstallTest.Default,
+            }
+            lua
+            {
+                create = Vehicles.Create.Tire,
+                init   = Vehicles.Init.Tire,
+                update = Vehicles.Update.Tire,
+            }
+        }
+
+        part TireRearRight
+        {
+            mechanicArea = Right,
+            area         = TireRearRight,
+            wheel        = RearRight,
+            category     = tire,
+            itemType     = Base.NormalTire,
+            durability   = 2,
+            container
+            {
+                test        = Vehicles.ContainerAccess.Tire,
+                contentType = Air,
+            }
+            table install
+            {
+                items
+                {
+                    1 { type = Base.Jack, count = 1, keep = true, }
+                    2 { tags = base:lugwrench, count = 1, keep = true, equip = primary, }
+                }
+                time   = 200,
+                skills = Mechanics:1,
+                test   = Vehicles.InstallTest.Default,
+            }
+            table uninstall
+            {
+                items
+                {
+                    1 { type = Base.Jack, count = 1, keep = true, }
+                    2 { tags = base:lugwrench, count = 1, keep = true, equip = primary, }
+                }
+                time   = 200,
+                skills = Mechanics:1,
+                test   = Vehicles.UninstallTest.Default,
+            }
+            lua
+            {
+                create = Vehicles.Create.Tire,
+                init   = Vehicles.Init.Tire,
+                update = Vehicles.Update.Tire,
+            }
+        }
+
+        part SeatFrontLeft
+        {
+            mechanicArea = Interior,
+            area         = SeatFrontLeft,
+            category     = seat,
+            itemType     = Base.NormalCarSeat,
+            durability   = 3,
+            container
+            {
+                seat = FrontLeft,
+                test = Vehicles.ContainerAccess.Seat,
+            }
+            lua
+            {
+                create = Vehicles.Create.Default,
+            }
+        }
+
+        part TruckBed
+        {
+            mechanicArea = Back,
+            area         = TruckBed,
+            category     = bodywork,
+            itemType     = Base.SmallTrunk,
+            durability   = 5,
+            container
+            {
+                capacity                  = 15,
+                conditionAffectsCapacity  = true,
+                test                      = Vehicles.ContainerAccess.TruckBedOpen,
+            }
+            lua
+            {
+                create = Vehicles.Create.Default,
+            }
         }
 
     } /** end vehicle ElectricScooter **/
 
 
     /** ====================================================
-        Custom sound declarations (referenced above)
+        Custom sound declarations
         ==================================================== **/
 
     sound ElectricScooterHum

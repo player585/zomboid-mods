@@ -67,12 +67,22 @@ end
 
 local function onPlayerUpdate(player)
     if not player then return end
+    if not getCore or not getCore() then return end -- UI not yet ready
+
     local hud = ensureCreated()
-    local vehicle = player:getVehicle()
+    if not hud then return end
+
+    local vehicle = player.getVehicle and player:getVehicle() or nil
 
     if vehicle and ElectricScooter.isElectricScooter(vehicle) then
         local batteryPart = vehicle:getPartById("Battery")
-        hud.charge = (batteryPart and batteryPart:getCondition()) or 0
+        local item = batteryPart and batteryPart:getInventoryItem()
+        -- B42 batteries use usedDelta (0..1), display as percent
+        if item then
+            hud.charge = item:getUsedDelta() * 100
+        else
+            hud.charge = 0
+        end
         if not hud:isVisible() then hud:setVisible(true) end
     else
         if hud:isVisible() then hud:setVisible(false) end

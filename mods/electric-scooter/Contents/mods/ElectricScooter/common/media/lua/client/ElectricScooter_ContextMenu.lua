@@ -17,7 +17,8 @@ local function onFillWorldObjectContextMenu(player, context, worldobjects, test)
 
                 context:addOption("Check Battery", vehicle, function(v)
                     local batteryPart = v:getPartById("Battery")
-                    local charge = batteryPart and batteryPart:getCondition() or 0
+                    local item = batteryPart and batteryPart:getInventoryItem()
+                    local charge = (item and item:getUsedDelta() * 100) or 0
                     local msg
 
                     if charge > 75 then
