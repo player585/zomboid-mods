@@ -13,6 +13,29 @@
 module Base
 {
 
+    /** ====================================================
+        Top-level model registration.
+
+        This is the BLOCK PZ actually uses to load the mesh
+        and bind it to a shader. Without this declaration the
+        mesh file is never loaded into the renderer, even if
+        the inline `model { file = ... }` block in the vehicle
+        references it. Format matches vanilla
+        scripts/generated/vehicles/vehicle_car_small_model.txt.
+
+        - mesh: media/models/<path>.txt (no extension; PZ adds .txt)
+        - shader: vehicle_multiuv (vanilla car shader, supports skin/mask/rust)
+        - scale: 1.0 because our mesh is authored at world scale
+          (vanilla SmallCar mesh is authored ~125x and uses scale=0.008)
+        ==================================================== **/
+    model Vehicles_ElectricScooter
+    {
+        mesh    = vehicles/Vehicles_ElectricScooter,
+        shader  = vehicle_multiuv,
+        invertX = false,
+        scale   = 1.0,
+    }
+
     vehicle ElectricScooter
     {
         mechanicType            = 1,
@@ -58,18 +81,11 @@ module Base
         textureDamage1Overlay   = Vehicles/ElectricScooter_damage1,
         textureDamage2Overlay   = Vehicles/ElectricScooter_damage2,
 
-        /** ---- Model ----
-            Vanilla PZ vehicle text-mesh format (NOT fbx).
-            Lives at media/models/Vehicles_ElectricScooter.txt.
-
-            scale & offset matched against vanilla SmallCar in Vehicle Editor:
-              - SmallCar uses scale=1.82, offset.y=0.55 to lift its mesh into
-                the bbox so wheels meet the ground.
-              - Our scooter mesh has Y range 0..1.08 (authored Y-up). At
-                offset.y=0 the bottom of the mesh sits AT origin (which is
-                below the ground plane), so half is buried.
-              - We lift mesh by half its height (~0.55) and scale modestly
-                so iso camera can see it. **/
+        /** ---- Model placement ----
+            References the top-level `model Vehicles_ElectricScooter`
+            declaration above. `file` here is the registered model NAME,
+            not a filesystem path. scale/offset apply on top of the
+            registered model's own scale. **/
         model
         {
             file   = Vehicles_ElectricScooter,
