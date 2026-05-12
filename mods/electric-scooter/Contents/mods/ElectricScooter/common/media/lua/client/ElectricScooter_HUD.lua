@@ -65,6 +65,30 @@ local function ensureCreated()
     return instance
 end
 
+-- Bulletproof safeChargeRead: wraps every nilable in pcall so a
+-- missing API method (e.g. getUsedDelta vs getDelta vs getCondition)
+-- never throws and never trips PZ's "Break On Error" debugger.
+local function safeChargeRead(item)
+    if not item then return 0 end
+    local ok, val
+    -- Try the modern (B42) API first.
+    if item.getUsedDelta then
+        ok, val = pcall(function() return item:getUsedDelta() end)
+        if ok and type(val) == "number" then return val * 100 end
+    end
+    -- Fall back to B41 API name.
+    if item.getDelta then
+        ok, val = pcall(function() return item:getDelta() end)
+        if ok and type(val) == "number" then return val * 100 end
+    end
+    -- Last resort: durability/condition based estimate.
+    if item.getCondition then
+        ok, val = pcall(function() return item:getCondition() end)
+        if ok and type(val) == "number" then return val end
+    end
+    return 0
+end
+
 local function onPlayerUpdate(player)
     if not player then return end
     if not getCore or not getCore() then return end -- UI not yet ready
@@ -72,21 +96,22 @@ local function onPlayerUpdate(player)
     local hud = ensureCreated()
     if not hud then return end
 
-    local vehicle = player.getVehicle and player:getVehicle() or nil
-
-    if vehicle and ElectricScooter.isElectricScooter(vehicle) then
-        local batteryPart = vehicle:getPartById("Battery")
-        local item = batteryPart and batteryPart:getInventoryItem()
-        -- B42 batteries use usedDelta (0..1), display as percent
-        if item then
-            hud.charge = item:getUsedDelta() * 100
+    -- Wrap the entire vehicle/part lookup in pcall so a nil chain never
+    -- trips the lua debugger when entering/exiting the scooter.
+    local ok, err = pcall(function()
+        local vehicle = player.getVehicle and player:getVehicle() or nil
+        if vehicle and ElectricScooter and ElectricScooter.isElectricScooter
+           and ElectricScooter.isElectricScooter(vehicle) then
+            local batteryPart = vehicle.getPartById and vehicle:getPartById("Battery") or nil
+            local item = batteryPart and batteryPart.getInventoryItem
+                         and batteryPart:getInventoryItem() or nil
+            hud.charge = safeChargeRead(item)
+            if not hud:isVisible() then hud:setVisible(true) end
         else
-            hud.charge = 0
+            if hud:isVisible() then hud:setVisible(false) end
         end
-        if not hud:isVisible() then hud:setVisible(true) end
-    else
-        if hud:isVisible() then hud:setVisible(false) end
-    end
+    end)
+    -- Silently swallow any error - never want HUD code to halt the player.
 end
 
 Events.OnPlayerUpdate.Add(onPlayerUpdate)
