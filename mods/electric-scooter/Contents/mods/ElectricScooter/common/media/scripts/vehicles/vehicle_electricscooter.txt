@@ -61,12 +61,20 @@ module Base
         /** ---- Model ----
             Vanilla PZ vehicle text-mesh format (NOT fbx).
             Lives at media/models/Vehicles_ElectricScooter.txt.
-            PZ resolves model.file = <name without extension>. **/
+
+            scale & offset matched against vanilla SmallCar in Vehicle Editor:
+              - SmallCar uses scale=1.82, offset.y=0.55 to lift its mesh into
+                the bbox so wheels meet the ground.
+              - Our scooter mesh has Y range 0..1.08 (authored Y-up). At
+                offset.y=0 the bottom of the mesh sits AT origin (which is
+                below the ground plane), so half is buried.
+              - We lift mesh by half its height (~0.55) and scale modestly
+                so iso camera can see it. **/
         model
         {
             file   = Vehicles_ElectricScooter,
-            scale  = 1.0,
-            offset = 0.0 0.0 0.0,
+            scale  = 1.5,
+            offset = 0.0 0.55 0.0,
         }
         skin
         {
