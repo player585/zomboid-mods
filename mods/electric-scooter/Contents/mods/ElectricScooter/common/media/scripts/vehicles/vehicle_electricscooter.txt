@@ -167,7 +167,11 @@ module Base
             }
             position outside
             {
-                offset = 0.30 0.10 0.0,
+                /** offset = where the player STANDS to mount the scooter.
+                    Set to (0.40, 0, 0) so the mount-point is just to the
+                    left of the scooter body (player stands beside the
+                    deck, swings their leg over). **/
+                offset = 0.40 0.0 0.0,
                 rotate = 0.0 0.0 0.0,
                 area   = SeatFrontLeft,
             }
@@ -188,9 +192,17 @@ module Base
         {
             xywh = 0.0 -0.42 0.30 0.20,
         }
+        /** SeatFrontLeft: the WORLD area the player must stand inside
+            to get the 'Enter Vehicle' context menu option. xywh is
+            x_center y_center w h in meters relative to vehicle origin.
+            For a scooter the player should be able to approach from
+            EITHER side: make it big (covers the whole scooter + 1 tile
+            margin) so the option appears reliably regardless of approach
+            angle. Vanilla SmallCar uses ~0.43x0.66 at x=0.6; we use a
+            symmetric 1.2x1.4 centered on the vehicle. **/
         area SeatFrontLeft
         {
-            xywh = 0.25 0.0 0.40 0.40,
+            xywh = 0.0 0.0 1.20 1.40,
         }
         area TireFrontLeft
         {
