@@ -1,10 +1,15 @@
 /** ============================================================
-    Electric Scooter - Vehicle Script
+    Electric Scooter - Vehicle Script (Build 42)
     Mod: ElectricScooter
     Author: zmodder
-    ============================================================
-    Designed as a near-silent stealth vehicle. Runs on battery
-    only — no gas tank. Low speed cap, single seat, lightweight.
+
+    A near-silent, battery-powered single-seater. Treats the
+    car battery as its only fuel source (no gas tank). Spawns
+    rare in suburb / parking pools.
+
+    Uses B42 vehicle template inheritance (template! = SmallCar)
+    instead of declaring every part inline. Overrides only the
+    pieces that differ from a small vanilla car.
     ============================================================ **/
 
 module Base
@@ -12,10 +17,18 @@ module Base
 
     vehicle ElectricScooter
     {
-        /** ---- Identity ---- **/
-        mechanicType            = 2,
+        /** Pull in the small-car chassis: areas, wheels, seats,
+            engine, battery, tires, brakes, doors, windows, sounds,
+            collision. We then override what matters. **/
+        template! = SmallCar,
 
-        /** ---- Performance ---- **/
+        /** ---- Identity / handling ---- **/
+        mechanicType            = 1,
+        engineRepairLevel       = 2,
+        playerDamageProtection  = 0.25,
+
+        /** ---- Performance: light, slow, near-silent ---- **/
+        mass                    = 90,
         engineForce             = 2800,
         engineQuality           = 60,
         engineLoudness          = 4,
@@ -24,32 +37,18 @@ module Base
         steeringIncrement       = 0.04,
         steeringClamp           = 0.3,
         stoppingMovementForce   = 2.0,
-
-        /** ---- Physical Properties ---- **/
-        mass                    = 90,
-        centerOfMassOffset      = 0 0.1 0,
-        suspensionStiffness     = 18,
-        suspensionDamping       = 2.2,
-        suspensionRestLength    = 0.2,
-        suspensionTravelCm      = 10,
-        suspensionMaxForce      = 3000,
         rollInfluence           = 0.15,
         wheelFriction           = 1.2,
-
-        /** ---- Off-Road ---- **/
         offRoadEfficiency       = 0.65,
 
-        /** ---- Passenger Protection ---- **/
-        playerDamageProtection  = 0.25,
-
-        /** ---- Appearance ---- **/
-        skin                    = vehicles/ElectricScooter_skin,
-        textureRust             = vehicles/ElectricScooter_rust,
+        /** ---- Custom skin / damage textures ---- **/
         textureMask             = vehicles/ElectricScooter_mask,
         textureLights           = vehicles/ElectricScooter_lights,
+        textureRust             = vehicles/ElectricScooter_rust,
         textureDamage1Overlay   = vehicles/ElectricScooter_damage1,
         textureDamage2Overlay   = vehicles/ElectricScooter_damage2,
 
+        /** ---- 3D model (placeholder cube for now) ---- **/
         model
         {
             file    = vehicles/ElectricScooter,
@@ -57,225 +56,56 @@ module Base
             offset  = 0 0 0,
         }
 
-        /** ---- Wheels ---- **/
-        wheel FrontLeft
-        {
-            front   = true,
-            offset  = -0.30 0 0.38,
-            radius  = 0.28,
-            width   = 0.12,
-        }
-        wheel FrontRight
-        {
-            front   = true,
-            offset  = 0.30 0 0.38,
-            radius  = 0.28,
-            width   = 0.12,
-        }
-        wheel RearLeft
-        {
-            front   = false,
-            offset  = -0.30 0 -0.38,
-            radius  = 0.28,
-            width   = 0.12,
-        }
-        wheel RearRight
-        {
-            front   = false,
-            offset  = 0.30 0 -0.38,
-            radius  = 0.28,
-            width   = 0.12,
-        }
-
-        /** ---- Seats (single rider) ---- **/
-        passenger
-        {
-            position    = FrontLeft,
-            seat        = front,
-            showPassenger = true,
-            hasRoof     = false,
-        }
-
-        /** ---- Parts ---- **/
-
-        part Engine
-        {
-            /* No itemType: engine is permanent (no installable engine block).
-               specificAnim omitted = use default mechanic anim. */
-            mechanicRequireKey  = false,
-            table install
-            {
-                requireInstalled = none,
-                skills { Mechanics=3, }
-                items
-                {
-                    Base.ScrapMetal,
-                }
-            }
-            table uninstall
-            {
-                skills { Mechanics=2, }
-                items
-                {
-                    Base.Screwdriver,
-                }
-            }
-            lua
-            {
-                create  = Vehicles.Create.Default,
-            }
-        }
-
-        /** Electric = Battery is the fuel source **/
-        part Battery
-        {
-            itemType        = Base.Battery,
-            table install
-            {
-                skills { Mechanics=1, }
-                items
-                {
-                    Base.Screwdriver,
-                }
-            }
-            table uninstall
-            {
-                skills { Mechanics=1, }
-                items
-                {
-                    Base.Screwdriver,
-                }
-            }
-            lua
-            {
-                create  = Vehicles.Create.Default,
-            }
-        }
-
-        part Tire[FrontLeft]
-        {
-            itemType = Base.Tire,
-            table install
-            {
-                skills { Mechanics=1, }
-                items
-                {
-                    Base.TirePump,
-                    keep Base.TireIron,
-                }
-            }
-            table uninstall
-            {
-                items
-                {
-                    keep Base.TireIron,
-                }
-            }
-        }
-
-        part Tire[FrontRight]
-        {
-            itemType = Base.Tire,
-            table install
-            {
-                skills { Mechanics=1, }
-                items
-                {
-                    Base.TirePump,
-                    keep Base.TireIron,
-                }
-            }
-            table uninstall
-            {
-                items
-                {
-                    keep Base.TireIron,
-                }
-            }
-        }
-
-        part Tire[RearLeft]
-        {
-            itemType = Base.Tire,
-            table install
-            {
-                skills { Mechanics=1, }
-                items
-                {
-                    Base.TirePump,
-                    keep Base.TireIron,
-                }
-            }
-            table uninstall
-            {
-                items
-                {
-                    keep Base.TireIron,
-                }
-            }
-        }
-
-        part Tire[RearRight]
-        {
-            itemType = Base.Tire,
-            table install
-            {
-                skills { Mechanics=1, }
-                items
-                {
-                    Base.TirePump,
-                    keep Base.TireIron,
-                }
-            }
-            table uninstall
-            {
-                items
-                {
-                    keep Base.TireIron,
-                }
-            }
-        }
-
-        part Windshield[Front]
-        {
-            itemType    = Base.SheetMetal,
-            table install
-            {
-                skills { Mechanics=1, }
-                items { Base.Screwdriver, }
-            }
-            table uninstall
-            {
-                items { Base.Screwdriver, }
-            }
-        }
-
-        /** ---- Trunk (small storage) ---- **/
-        part TrunkDoor
-        {
-            itemType    = Base.SheetMetal,
-        }
-
-        part Trunk
-        {
-            capacity    = 8,
-        }
-
-        /** ---- Sounds ---- **/
+        /** ---- Custom near-silent sound set ---- **/
         sound
         {
             engine          = ElectricScooterHum,
             engineStart     = ElectricScooterStart,
             engineTurnOff   = ElectricScooterOff,
-            horn            = VehicleHornSmall,
-            ignitionFail    = VehicleIgnitionFail,
+            horn            = VehicleHornStandard,
+            ignitionFail    = VehicleIgnitionFailSmallCar,
+        }
+
+        /** ---- Part overrides ---- **/
+
+        /** Battery: vanilla CarBattery, but tagged via Lua hook
+            to drain even when stopped (handled by our update fn). **/
+        part Battery
+        {
+            itemType = Base.CarBattery,
+            lua
+            {
+                create = Vehicles.Create.Battery,
+                update = ElectricScooter.Update.Battery,
+            }
+        }
+
+        /** Engine: keep vanilla install/uninstall flow, but our
+            update function locks fuel at max so the vanilla "no gas"
+            check never fires (scooter has no gas tank). **/
+        part Engine
+        {
+            lua
+            {
+                create      = Vehicles.Create.Engine,
+                update      = ElectricScooter.Update.Engine,
+                checkEngine = Vehicles.CheckEngine.Engine,
+            }
+        }
+
+        /** Hide the (inherited) gas tank visually — we keep the part
+            so vanilla code that probes for it doesn't crash, but lock
+            it full and uninteractable. **/
+        part GasTank
+        {
+            category = nodisplay,
         }
 
     } /** end vehicle ElectricScooter **/
 
 
     /** ====================================================
-        Sound Block Declarations
+        Custom sound declarations (referenced above)
         ==================================================== **/
 
     sound ElectricScooterHum
