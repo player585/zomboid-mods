@@ -46,19 +46,32 @@ module Base
         shadowExtents           = 0.5 1.2,
         shadowOffset            = 0.0 0.0,
 
-        /** ---- Textures ---- **/
-        textureMask             = vehicles/ElectricScooter_mask,
-        textureLights           = vehicles/ElectricScooter_lights,
-        textureRust             = vehicles/ElectricScooter_rust,
-        textureDamage1Overlay   = vehicles/ElectricScooter_damage1,
-        textureDamage2Overlay   = vehicles/ElectricScooter_damage2,
+        /** ---- Textures ----
+            Using vanilla small-car overlay textures while the
+            placeholder uses the vanilla mesh. Once we ship a
+            real ElectricScooter FBX, switch these back to our
+            mod-local vehicles/ElectricScooter_*.png assets.
+        **/
+        textureMask             = Vehicles/vehicle_smallcar_mask,
+        textureLights           = Vehicles/vehicle_smallcar_lights,
+        textureRust             = Vehicles/Veh_Rust,
+        textureDamage1Overlay   = Vehicles/Veh_Blood_Mask,
+        textureDamage2Overlay   = Vehicles/Veh_Blood_Hvy,
 
-        /** ---- Model ---- **/
+        /** ---- Model ----
+            Placeholder: borrow vanilla small-car mesh + skin until
+            we ship a real scooter FBX. Scaled down (0.9 vs vanilla
+            1.82) to look more scooter-sized in the world.
+        **/
         model
         {
-            file    = vehicles/ElectricScooter,
-            scale   = 0.012,
-            offset  = 0 0 0,
+            file    = Vehicles_SmallCar,
+            scale   = 0.9,
+            offset  = 0.0 0.15 0.0,
+        }
+        skin
+        {
+            texture = Vehicles/vehicle_smallcarshell,
         }
 
         /** ---- Sounds ---- **/
