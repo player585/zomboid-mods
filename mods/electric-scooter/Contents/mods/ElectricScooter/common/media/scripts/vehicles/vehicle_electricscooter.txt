@@ -199,6 +199,8 @@ module Base
 
         part Engine
         {
+            model {
+            }
             mechanicArea       = Engine,
             area               = Engine,
             category           = engine,
@@ -214,6 +216,8 @@ module Base
 
         part Battery
         {
+            model {
+            }
             mechanicArea       = Engine,
             area               = Engine,
             itemType           = Base.CarBattery,
@@ -261,6 +265,8 @@ module Base
 
         part TireFrontLeft
         {
+            model {
+            }
             mechanicArea = Left,
             area         = TireFrontLeft,
             wheel        = FrontLeft,
@@ -304,6 +310,8 @@ module Base
 
         part TireFrontRight
         {
+            model {
+            }
             mechanicArea = Right,
             area         = TireFrontRight,
             wheel        = FrontRight,
@@ -347,6 +355,8 @@ module Base
 
         part TireRearLeft
         {
+            model {
+            }
             mechanicArea = Left,
             area         = TireRearLeft,
             wheel        = RearLeft,
@@ -390,6 +400,8 @@ module Base
 
         part TireRearRight
         {
+            model {
+            }
             mechanicArea = Right,
             area         = TireRearRight,
             wheel        = RearRight,
@@ -433,6 +445,8 @@ module Base
 
         part SeatFrontLeft
         {
+            model {
+            }
             mechanicArea = Interior,
             area         = SeatFrontLeft,
             category     = seat,
@@ -451,6 +465,8 @@ module Base
 
         part TruckBed
         {
+            model {
+            }
             mechanicArea = Back,
             area         = TruckBed,
             category     = bodywork,
