@@ -40,42 +40,36 @@ module Base
         rearEndHealth           = 100,
         seats                   = 1,
 
-        /** Physics/interaction bounds sized to match the vanilla
-            small-car mesh we're using as the placeholder. When we
-            ship a real scooter FBX, shrink these to the smaller
-            extents. **/
-        extents                 = 0.7582 0.5934 1.8462,
-        physicsChassisShape     = 0.7582 0.5934 1.8462,
-        centerOfMassOffset      = 0.0 0.3022 0.0,
-        shadowExtents           = 0.7582 1.8462,
+        /** Physics/interaction bounds sized to the REAL scooter mesh.
+            Mesh dimensions: X=0.25 (width), Y=1.1 (height), Z=0.95 (length).
+            Half-extents: 0.125 X, 0.55 Y, 0.475 Z.
+            Bumped slightly to give clickable margin around the body. **/
+        extents                 = 0.30 0.60 1.00,
+        physicsChassisShape     = 0.20 0.40 0.50,
+        centerOfMassOffset      = 0.0 0.15 0.0,
+        shadowExtents           = 0.30 1.00,
         shadowOffset            = 0.0 0.0,
 
         /** ---- Textures ----
-            Using vanilla small-car overlay textures while the
-            placeholder uses the vanilla mesh. Once we ship a
-            real ElectricScooter FBX, switch these back to our
-            mod-local vehicles/ElectricScooter_*.png assets.
-        **/
-        textureMask             = Vehicles/vehicle_smallcar_mask,
-        textureLights           = Vehicles/vehicle_smallcar_lights,
-        textureRust             = Vehicles/Veh_Rust,
-        textureDamage1Overlay   = Vehicles/Veh_Blood_Mask,
-        textureDamage2Overlay   = Vehicles/Veh_Blood_Hvy,
+            Mod-local scooter textures. **/
+        textureMask             = Vehicles/ElectricScooter_mask,
+        textureLights           = Vehicles/ElectricScooter_lights,
+        textureRust             = Vehicles/ElectricScooter_rust,
+        textureDamage1Overlay   = Vehicles/ElectricScooter_damage1,
+        textureDamage2Overlay   = Vehicles/ElectricScooter_damage2,
 
         /** ---- Model ----
-            Placeholder: borrow vanilla small-car mesh + skin until
-            we ship a real scooter FBX. Scaled down (0.9 vs vanilla
-            1.82) to look more scooter-sized in the world.
-        **/
+            Real ElectricScooter FBX (deck, stem, handlebars, 2 wheels).
+            scale=1.0 because the FBX is already authored to world scale. **/
         model
         {
-            file   = Vehicles_SmallCar,
-            scale  = 1.82,
-            offset = 0.0 0.2692 0.0,
+            file   = ElectricScooter,
+            scale  = 1.0,
+            offset = 0.0 0.0 0.0,
         }
         skin
         {
-            texture = Vehicles/vehicle_smallcarshell,
+            texture = Vehicles/ElectricScooter_skin,
         }
 
         /** ---- Sounds ---- **/
@@ -88,84 +82,92 @@ module Base
             ignitionFail    = VehicleIgnitionFailSmallCar,
         }
 
-        /** Wheels: copied from vanilla SmallCar to match the
-            placeholder mesh's actual wheel positions. **/
+        /** Wheels: PZ needs 4 wheel definitions even on a 2-wheel
+            vehicle. We pair each visible wheel with a hidden twin
+            offset slightly inward so physics still feels stable
+            and the script validator passes. Real wheels are at
+            Z=+0.45 (front) and Z=-0.45 (rear), radius 0.08. **/
         wheel FrontLeft
         {
             front  = true,
-            offset = 0.2857 -0.2747 0.511,
-            radius = 0.15,
-            width  = 0.2,
+            offset = 0.01 -0.05 0.45,
+            radius = 0.08,
+            width  = 0.06,
         }
         wheel FrontRight
         {
             front  = true,
-            offset = -0.2857 -0.2747 0.511,
-            radius = 0.15,
-            width  = 0.2,
+            offset = -0.01 -0.05 0.45,
+            radius = 0.08,
+            width  = 0.06,
         }
         wheel RearLeft
         {
             front  = false,
-            offset = 0.2857 -0.2747 -0.5549,
-            radius = 0.15,
-            width  = 0.2,
+            offset = 0.01 -0.05 -0.45,
+            radius = 0.08,
+            width  = 0.06,
         }
         wheel RearRight
         {
             front  = false,
-            offset = -0.2857 -0.2747 -0.5549,
-            radius = 0.15,
-            width  = 0.2,
+            offset = -0.01 -0.05 -0.45,
+            radius = 0.08,
+            width  = 0.06,
         }
 
-        /** Seat / passenger: only one rider on a scooter, but we
-            use vanilla small-car offsets so enter/exit click zones
-            align with the placeholder mesh. **/
+        /** Seat / passenger: single rider, feet on deck (~y=0.13),
+            body centered over scooter length. Outside dismount
+            offset is to the left of the deck. **/
         passenger FrontLeft
         {
             position inside
             {
-                offset = 0.1758 -0.1374 0.0879,
+                offset = 0.0 0.20 -0.05,
                 rotate = 0.0 0.0 0.0,
             }
             position outside
             {
-                offset = 0.6209 -0.4121 0.1209,
+                offset = 0.30 0.10 0.0,
                 rotate = 0.0 0.0 0.0,
                 area   = SeatFrontLeft,
             }
         }
 
-        /** Interaction zones: copied from vanilla SmallCar so
-            right-click hits land on the placeholder mesh. **/
+        /** Interaction zones, scooter-sized.
+            Coordinate frame: x=width(left/right), y=length(front/back).
+            Scooter front (handlebars) is at +y, rear wheel at -y.
+            Engine area = front (under handlebars/dashboard).
+            SeatFrontLeft = center of deck.
+            TruckBed = behind rider (rear of deck).
+            Tire areas wrap each wheel for kick/check. **/
         area Engine
         {
-            xywh = 0.0 1.1374 0.7692 0.4176,
+            xywh = 0.0 0.42 0.30 0.30,
         }
         area TruckBed
         {
-            xywh = 0.0 -1.1374 0.7692 0.4176,
+            xywh = 0.0 -0.42 0.30 0.20,
         }
         area SeatFrontLeft
         {
-            xywh = 0.6813 0.1209 0.4725 0.4725,
+            xywh = 0.25 0.0 0.40 0.40,
         }
         area TireFrontLeft
         {
-            xywh = 0.5989 0.5989 0.4286 0.4725,
+            xywh = 0.15 0.45 0.20 0.20,
         }
         area TireFrontRight
         {
-            xywh = -0.5989 0.5989 0.4286 0.4725,
+            xywh = -0.15 0.45 0.20 0.20,
         }
         area TireRearLeft
         {
-            xywh = 0.5989 -0.6703 0.4286 0.4725,
+            xywh = 0.15 -0.45 0.20 0.20,
         }
         area TireRearRight
         {
-            xywh = -0.5989 -0.6703 0.4286 0.4725,
+            xywh = -0.15 -0.45 0.20 0.20,
         }
 
         /** ---- Parts ---- **/
