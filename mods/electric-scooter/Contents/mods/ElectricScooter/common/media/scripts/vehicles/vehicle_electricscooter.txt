@@ -52,8 +52,8 @@ module Base
         steeringIncrement       = 0.04,
         steeringClamp           = 0.3,
         stoppingMovementForce   = 2.0,
-        rollInfluence           = 0.15,
-        wheelFriction           = 1.2,
+        rollInfluence           = 0.05,
+        wheelFriction           = 1.5,
         offRoadEfficiency       = 0.65,
         suspensionStiffness     = 30.0,
         suspensionDamping       = 2.88,
@@ -126,7 +126,7 @@ module Base
         {
             model  = Vehicles_Wheel,
             front  = true,
-            offset = 0.01 -0.05 0.45,
+            offset = 0.10 -0.05 0.45,
             radius = 0.08,
             width  = 0.06,
         }
@@ -134,7 +134,7 @@ module Base
         {
             model  = Vehicles_Wheel,
             front  = true,
-            offset = -0.01 -0.05 0.45,
+            offset = -0.10 -0.05 0.45,
             radius = 0.08,
             width  = 0.06,
         }
@@ -142,7 +142,7 @@ module Base
         {
             model  = Vehicles_Wheel,
             front  = false,
-            offset = 0.01 -0.05 -0.45,
+            offset = 0.10 -0.05 -0.45,
             radius = 0.08,
             width  = 0.06,
         }
@@ -150,7 +150,7 @@ module Base
         {
             model  = Vehicles_Wheel,
             front  = false,
-            offset = -0.01 -0.05 -0.45,
+            offset = -0.10 -0.05 -0.45,
             radius = 0.08,
             width  = 0.06,
         }
