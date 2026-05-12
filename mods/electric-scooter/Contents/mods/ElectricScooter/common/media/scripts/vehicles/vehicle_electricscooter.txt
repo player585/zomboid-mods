@@ -59,11 +59,12 @@ module Base
         textureDamage2Overlay   = Vehicles/ElectricScooter_damage2,
 
         /** ---- Model ----
-            Real ElectricScooter FBX (deck, stem, handlebars, 2 wheels).
-            scale=1.0 because the FBX is already authored to world scale. **/
+            Vanilla PZ vehicle text-mesh format (NOT fbx).
+            Lives at media/models/Vehicles_ElectricScooter.txt.
+            PZ resolves model.file = <name without extension>. **/
         model
         {
-            file   = ElectricScooter,
+            file   = Vehicles_ElectricScooter,
             scale  = 1.0,
             offset = 0.0 0.0 0.0,
         }
