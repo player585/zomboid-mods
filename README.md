@@ -16,7 +16,7 @@ own subfolder with full source, docs, and Workshop-ready packaging.
 
 | Mod | Description | Status | Build |
 |-----|-------------|--------|-------|
-| [⚡ Electric Scooter](./mods/electric-scooter) | Near-silent battery-powered scooter. Stealth vehicle, HUD battery indicator, right-click battery check | ✅ v1.0.0 (assets pending) | 41 + 42 |
+| [⚡ Electric Scooter](./mods/electric-scooter) | Near-silent battery-powered scooter. Stealth vehicle, HUD battery indicator, right-click battery check | ✅ v1.0.0 (placeholder assets) | 41 + 42 |
 
 > More mods coming — see [ROADMAP.md](./ROADMAP.md). Drop a ⭐ to follow along.
 

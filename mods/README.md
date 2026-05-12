@@ -9,7 +9,7 @@ self-contained — README, `workshop.txt`, and the full
 
 | Folder | Mod | Status |
 |--------|-----|--------|
-| [electric-scooter](./electric-scooter) | ⚡ Electric Scooter | ✅ v1.0.0 (assets pending) |
+| [electric-scooter](./electric-scooter) | ⚡ Electric Scooter | ✅ v1.0.0 (placeholder assets) |
 
 > Want to add one? Run `./scripts/new-mod.sh <folder> <ModId> "Display Name"`
 > from the repo root — it scaffolds the whole layout here for you.

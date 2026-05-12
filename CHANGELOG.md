@@ -7,6 +7,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on a
 
 ## [Unreleased]
 
+### Added
+- **Electric Scooter placeholder asset kit** — the mod is now ship-runnable
+  end-to-end without missing-file errors:
+  - 6 textures (skin, rust, mask, lights, damage1, damage2) at 512×512 PNG.
+  - `poster.png` (512×512) and `icon.png` (128×128) for both Build 41 and 42.
+  - 3 OGG sounds at 44.1 kHz mono: 2.0s seamless hum loop, 1.4s startup
+    whir, 1.0s power-down decay.
+  - `ElectricScooter.fbx` placeholder mesh (deck + 2 wheels + handlebar
+    post + bar, ~40 vertices) as ASCII FBX 7.4.
+- `.tools/` folder with Python generators (`gen_textures.py`,
+  `gen_poster.py`, `gen_sounds.py`, `gen_fbx.py`) plus `gen_all.sh`
+  orchestrator and a `.tools/README.md`. Reproducible: any contributor
+  can regen the kit with `pip install Pillow numpy scipy && ./.tools/gen_all.sh`.
+- Electric Scooter `mod.info` already pointed at `icon.png` — file is
+  now actually present.
+
 ### Changed
 - **Repo layout:** all mods now live under a top-level `mods/` folder so
   they’re visually grouped instead of mixing with infra files. Moved
@@ -41,7 +57,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) on a
 - Initial release. Battery-powered single-seat scooter, near-silent engine
   (loudness 4), HUD battery indicator, right-click "Check Battery", spawns in
   suburbs and parking lots, server-authoritative battery drain.
-- **Note:** Assets (textures, FBX model, OGG sounds, posters) not yet
-  shipped — see `mods/electric-scooter/README.md` for the asset list.
+- **Note:** Placeholder assets ship with v1.0.0 — textures, FBX mesh,
+  OGG sounds, posters, and icons. Real art replaces them under the same
+  filenames (no code changes needed). See `mods/electric-scooter/README.md`
+  and `.tools/README.md`.
 - **Note:** Not yet published to Steam Workshop; `workshop.txt` still
   has `id=0`.
