@@ -1,0 +1,15 @@
+# Force binary handling for game assets so git doesn't corrupt them
+# via line-ending conversion on Windows/CRLF systems.
+*.fbx binary
+*.png binary
+*.ogg binary
+*.dds binary
+*.tga binary
+*.zip binary
+*.pak binary
+
+# Lua / script text files: keep LF on disk regardless of OS
+*.lua text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.info text eol=lf
