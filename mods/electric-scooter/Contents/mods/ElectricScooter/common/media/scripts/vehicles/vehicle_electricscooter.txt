@@ -67,14 +67,15 @@ module Base
             Mesh dimensions: X=0.25 (width), Y=1.1 (height), Z=0.95 (length).
             Half-extents: 0.125 X, 0.55 Y, 0.475 Z.
             Bumped slightly to give clickable margin around the body. **/
-        /** Enlarged extents so click hitbox covers the visible mesh.
-            Was 0.30 0.60 1.00 but the visible mesh sat above the hitbox
-            (you could right-click the shadow but not the body).
-            Now wide and tall enough to catch clicks anywhere on the rider/scooter. **/
-        extents                 = 0.80 1.40 1.20,
-        physicsChassisShape     = 0.60 1.00 1.00,
-        centerOfMassOffset      = 0.0 0.15 0.0,
-        shadowExtents           = 0.80 1.20,
+        /** Hitbox sized to the REAL scooter mesh.
+            Fresh mesh dimensions: X=0.5 W, Y=1.075 H, Z=1.06 L.
+            Half-extents + generous padding so clicks anywhere on the
+            visible body register. Y centered at 0.55 (half mesh height)
+            via centerOfMassOffset so the hitbox vertically covers ground-to-top. **/
+        extents                 = 0.60 1.20 1.30,
+        physicsChassisShape     = 0.40 1.00 1.00,
+        centerOfMassOffset      = 0.0 0.55 0.0,
+        shadowExtents           = 0.60 1.30,
         shadowOffset            = 0.0 0.0,
 
         /** ---- Textures ----
@@ -91,14 +92,14 @@ module Base
             not a filesystem path. scale/offset apply on top of the
             registered model's own scale. **/
         /** Visible model placement.
-            offset.y was 0.55 (lifted mesh above ground) but that put the
-            visible mesh OUTSIDE the click hitbox -- you could only click
-            the shadow, not the colored scooter. Setting offset to 0 0 0
-            puts the mesh AT the entity origin so clicks register. **/
+            Fresh mesh is authored with base at Y=0 (deck sits on ground,
+            handlebars at Y=1.075). Use scale=1.0 to render at world size,
+            offset 0 0 0 so the mesh origin matches the entity origin and
+            click hitbox aligns with what the player sees. **/
         model
         {
             file   = Vehicles_ElectricScooter,
-            scale  = 1.5,
+            scale  = 1.0,
             offset = 0.0 0.0 0.0,
         }
         skin
