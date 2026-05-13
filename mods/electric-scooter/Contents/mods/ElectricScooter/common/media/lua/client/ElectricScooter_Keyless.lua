@@ -1,115 +1,108 @@
 -- ============================================================
 --  ElectricScooter_Keyless.lua
 --  CLIENT-SIDE:
---    Real e-scooters don't use keys — they use a power button or
---    NFC fob. We emulate that by auto-binding a phantom key to
---    any ElectricScooter the moment a player enters it.
+--    Real e-scooters don't use keys — they use a power button.
+--    We emulate that by telling PZ a key is permanently "in
+--    the ignition" for any ElectricScooter.
 --
---    Strategy:
---      1. When a player enters a vehicle, check if it's an
---         ElectricScooter (by script name).
---      2. If so, assign a random keyId to the vehicle if it
---         doesn't have one.
---      3. Spawn a hidden "ScooterFob" key in the player's
---         inventory bound to that ID — OR, simpler, just tell
---         the vehicle the player has the key by setting the
---         key state directly.
---
---    PZ checks key presence via `vehicle:getKeyId()` vs the
---    player's inventory. Easier: override the start logic by
---    calling `vehicle:setKeysInIgnition(true)` and giving the
---    player a matching CarKey on entry. The key is auto-removed
---    when they exit so it doesn't clutter inventory.
+--    Strategy (revised, no inventory key needed):
+--      - On OnEnterVehicle: if the vehicle is an ElectricScooter,
+--        call setKeysInIgnition(true). The vanilla start logic
+--        checks this flag before complaining about missing keys.
+--      - Also assign a keyId if missing (some code paths read it).
+--      - Every tick while in a scooter, re-assert the flag in case
+--        vanilla code clears it.
+--      - Clean up any orphan CarKey items our older build dropped
+--        in the player's inventory.
 -- ============================================================
 
 require "ElectricScooter_Core"
 
 ElectricScooter.Keyless = ElectricScooter.Keyless or {}
 
--- Track keys we spawned so we can clean them up on exit
-local spawnedKeys = {}
-
 local function isElectricScooter(vehicle)
     if not vehicle then return false end
-    local script = vehicle:getScript()
-    if not script then return false end
+    local ok, script = pcall(function() return vehicle:getScript() end)
+    if not ok or not script then return false end
     local name = script:getName()
     return name == "ElectricScooter"
 end
 
 -- ------------------------------------------------------------
--- Bind a phantom fob when entering the scooter
+-- Set the "keys in ignition" flag and ensure keyId exists
+-- ------------------------------------------------------------
+local function enableKeyless(vehicle)
+    if not vehicle then return end
+
+    -- Ensure vehicle has a keyId (some checks short-circuit on 0)
+    local ok1, id = pcall(function() return vehicle:getKeyId() end)
+    if ok1 and id == 0 then
+        pcall(function() vehicle:setKeyId(ZombRand(2147483647) + 1) end)
+    end
+
+    -- Tell the game a key is already in the ignition
+    pcall(function() vehicle:setKeysInIgnition(true) end)
+end
+
+-- ------------------------------------------------------------
+-- Remove any leftover phantom CarKey from the previous build
+-- ------------------------------------------------------------
+local function cleanupOrphanKeys(player)
+    if not player then return end
+    local inv = player:getInventory()
+    if not inv then return end
+    local items = inv:getItems()
+    local toRemove = {}
+    for i = 0, items:size() - 1 do
+        local it = items:get(i)
+        if it and it.getName and it:getName() == "Scooter Fob" then
+            table.insert(toRemove, it)
+        end
+    end
+    for _, it in ipairs(toRemove) do
+        pcall(function() inv:Remove(it) end)
+    end
+end
+
+-- ------------------------------------------------------------
+-- Hooks
 -- ------------------------------------------------------------
 local function onEnterVehicle(player)
     if not player then return end
+    cleanupOrphanKeys(player)
     local vehicle = player:getVehicle()
-    if not vehicle or not isElectricScooter(vehicle) then return end
-
-    -- Ensure vehicle has a keyId
-    local id = vehicle:getKeyId()
-    if id == 0 then
-        id = ZombRand(2147483647) + 1
-        vehicle:setKeyId(id)
+    if isElectricScooter(vehicle) then
+        enableKeyless(vehicle)
     end
-
-    -- Check if player already has a matching key
-    local inv = player:getInventory()
-    local items = inv:getItems()
-    for i = 0, items:size() - 1 do
-        local it = items:get(i)
-        if it and it.getKeyId and it:getKeyId() == id then
-            -- Already has matching key, nothing to do
-            return
-        end
-    end
-
-    -- Spawn a phantom fob and bind it
-    local fob = InventoryItemFactory.CreateItem("Base.CarKey")
-    if not fob then return end
-    fob:setKeyId(id)
-    fob:setName("Scooter Fob")
-    inv:AddItem(fob)
-
-    -- Remember it so we can remove it on exit
-    spawnedKeys[player:getUsername() or "local"] = fob
 end
 
--- ------------------------------------------------------------
--- Remove phantom fob when exiting
--- ------------------------------------------------------------
-local function onExitVehicle(player)
+-- Re-assert each tick so vanilla can't undo us
+local function onPlayerUpdate(player)
     if not player then return end
-    local key = "local"
-    if player.getUsername then
-        key = player:getUsername() or "local"
-    end
-    local fob = spawnedKeys[key]
-    if fob then
-        local inv = player:getInventory()
-        if inv and inv:contains(fob) then
-            inv:Remove(fob)
+    local vehicle = player:getVehicle()
+    if isElectricScooter(vehicle) then
+        -- only call if currently false to avoid spam
+        local ok, on = pcall(function() return vehicle:isKeysInIgnition() end)
+        if ok and not on then
+            pcall(function() vehicle:setKeysInIgnition(true) end)
         end
-        spawnedKeys[key] = nil
     end
 end
 
--- ------------------------------------------------------------
--- Hook B42 events. OnEnterVehicle / OnExitVehicle fire after
--- the player is fully seated / has left.
--- ------------------------------------------------------------
-Events.OnEnterVehicle.Add(onEnterVehicle)
-Events.OnExitVehicle.Add(onExitVehicle)
-
--- Also handle the edge case where the mod is loaded with a
--- player already in a scooter (save reload):
 local function onGameStart()
     local p = getPlayer()
-    if p and p:getVehicle() and isElectricScooter(p:getVehicle()) then
-        onEnterVehicle(p)
+    if p then
+        cleanupOrphanKeys(p)
+        if isElectricScooter(p:getVehicle()) then
+            enableKeyless(p:getVehicle())
+        end
     end
 end
+
+Events.OnEnterVehicle.Add(onEnterVehicle)
+Events.OnPlayerUpdate.Add(onPlayerUpdate)
 Events.OnGameStart.Add(onGameStart)
 
 if getDebug() then
-    print("[ElectricScooter] Keyless start system loaded")
+    print("[ElectricScooter] Keyless start (setKeysInIgnition mode) loaded")
 end
