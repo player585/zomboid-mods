@@ -1,19 +1,12 @@
 -- ============================================================
 --  ElectricScooter_Keyless.lua
 --  CLIENT-SIDE:
---    Real e-scooters don't use keys — they use a power button.
---    We emulate that by telling PZ a key is permanently "in
---    the ignition" for any ElectricScooter.
---
---    Strategy (revised, no inventory key needed):
---      - On OnEnterVehicle: if the vehicle is an ElectricScooter,
---        call setKeysInIgnition(true). The vanilla start logic
---        checks this flag before complaining about missing keys.
---      - Also assign a keyId if missing (some code paths read it).
---      - Every tick while in a scooter, re-assert the flag in case
---        vanilla code clears it.
---      - Clean up any orphan CarKey items our older build dropped
---        in the player's inventory.
+--    Real e-scooters use a power button, not a key. We:
+--      1. Force setKeysInIgnition(true) every tick
+--      2. Inject a "Power On" / "Power Off" radial menu option
+--         that bypasses the vanilla key check and starts the
+--         engine directly via engineDoStarting()
+--      3. Also auto-power-on when the player enters
 -- ============================================================
 
 require "ElectricScooter_Core"
@@ -29,73 +22,102 @@ local function isElectricScooter(vehicle)
 end
 
 -- ------------------------------------------------------------
--- Set the "keys in ignition" flag and ensure keyId exists
+-- Force the vehicle into a "key-present" state
 -- ------------------------------------------------------------
-local function enableKeyless(vehicle)
+local function forceKeyless(vehicle)
     if not vehicle then return end
-
-    -- Ensure vehicle has a keyId (some checks short-circuit on 0)
-    local ok1, id = pcall(function() return vehicle:getKeyId() end)
-    if ok1 and id == 0 then
-        pcall(function() vehicle:setKeyId(ZombRand(2147483647) + 1) end)
-    end
-
-    -- Tell the game a key is already in the ignition
-    pcall(function() vehicle:setKeysInIgnition(true) end)
-end
-
--- ------------------------------------------------------------
--- Remove any leftover phantom CarKey from the previous build
--- ------------------------------------------------------------
-local function cleanupOrphanKeys(player)
-    if not player then return end
-    local inv = player:getInventory()
-    if not inv then return end
-    local items = inv:getItems()
-    local toRemove = {}
-    for i = 0, items:size() - 1 do
-        local it = items:get(i)
-        if it and it.getName and it:getName() == "Scooter Fob" then
-            table.insert(toRemove, it)
+    pcall(function()
+        if vehicle:getKeyId() == 0 then
+            vehicle:setKeyId(ZombRand(2147483647) + 1)
         end
-    end
-    for _, it in ipairs(toRemove) do
-        pcall(function() inv:Remove(it) end)
-    end
+    end)
+    pcall(function() vehicle:setKeysInIgnition(true) end)
+    pcall(function() vehicle:setHotwired(true) end)
+    pcall(function() vehicle:setHotwiredBroken(false) end)
 end
 
 -- ------------------------------------------------------------
--- Hooks
+-- Direct engine start, bypassing key UI
 -- ------------------------------------------------------------
-local function onEnterVehicle(player)
+local function powerOn(player)
     if not player then return end
-    cleanupOrphanKeys(player)
-    local vehicle = player:getVehicle()
-    if isElectricScooter(vehicle) then
-        enableKeyless(vehicle)
+    local v = player:getVehicle()
+    if not isElectricScooter(v) then return end
+    forceKeyless(v)
+    pcall(function() v:engineDoStarting() end)
+    pcall(function() v:setEngineRunning(true) end)
+    player:Say("*scooter powered on*")
+end
+
+local function powerOff(player)
+    if not player then return end
+    local v = player:getVehicle()
+    if not isElectricScooter(v) then return end
+    pcall(function() v:setEngineRunning(false) end)
+    pcall(function() v:shutOff() end)
+    player:Say("*scooter powered off*")
+end
+
+ElectricScooter.Keyless.powerOn  = powerOn
+ElectricScooter.Keyless.powerOff = powerOff
+
+-- ------------------------------------------------------------
+-- Inject "Power On / Off" into the vehicle radial menu (V key)
+-- ------------------------------------------------------------
+local function addPowerOptions(menu, player, vehicle)
+    if not isElectricScooter(vehicle) then return end
+    if vehicle:isEngineRunning() then
+        menu:addSlice(getText("IGUI_VehiclePowerOff") or "Power Off",
+                      getTexture("media/ui/vehicles/vehicle_shutoff.png"),
+                      function() powerOff(player) end)
+    else
+        menu:addSlice(getText("IGUI_VehiclePowerOn") or "Power On",
+                      getTexture("media/ui/vehicles/vehicle_start.png"),
+                      function() powerOn(player) end)
     end
 end
 
--- Re-assert each tick so vanilla can't undo us
+-- Hook into the radial menu fill event if it exists
+if Events.OnFillVehicleRadialMenu then
+    Events.OnFillVehicleRadialMenu.Add(addPowerOptions)
+end
+
+-- ------------------------------------------------------------
+-- Also inject into the right-click world context menu when
+-- standing in a scooter
+-- ------------------------------------------------------------
+local function onFillWorldContextMenu(player, context, worldobjects, test)
+    local pl = getSpecificPlayer(player)
+    if not pl then return end
+    local v = pl:getVehicle()
+    if not isElectricScooter(v) then return end
+    if v:isEngineRunning() then
+        context:addOption("Power Off Scooter", nil, function() powerOff(pl) end)
+    else
+        context:addOption("Power On Scooter", nil, function() powerOn(pl) end)
+    end
+end
+Events.OnFillWorldObjectContextMenu.Add(onFillWorldContextMenu)
+
+-- ------------------------------------------------------------
+-- Per-tick re-assert + cleanup
+-- ------------------------------------------------------------
 local function onPlayerUpdate(player)
     if not player then return end
-    local vehicle = player:getVehicle()
-    if isElectricScooter(vehicle) then
-        -- only call if currently false to avoid spam
-        local ok, on = pcall(function() return vehicle:isKeysInIgnition() end)
-        if ok and not on then
-            pcall(function() vehicle:setKeysInIgnition(true) end)
-        end
-    end
+    local v = player:getVehicle()
+    if isElectricScooter(v) then forceKeyless(v) end
+end
+
+local function onEnterVehicle(player)
+    if not player then return end
+    local v = player:getVehicle()
+    if isElectricScooter(v) then forceKeyless(v) end
 end
 
 local function onGameStart()
     local p = getPlayer()
-    if p then
-        cleanupOrphanKeys(p)
-        if isElectricScooter(p:getVehicle()) then
-            enableKeyless(p:getVehicle())
-        end
+    if p and isElectricScooter(p:getVehicle()) then
+        forceKeyless(p:getVehicle())
     end
 end
 
@@ -104,5 +126,5 @@ Events.OnPlayerUpdate.Add(onPlayerUpdate)
 Events.OnGameStart.Add(onGameStart)
 
 if getDebug() then
-    print("[ElectricScooter] Keyless start (setKeysInIgnition mode) loaded")
+    print("[ElectricScooter] Keyless v3 (force flags + Power On/Off menu) loaded")
 end
